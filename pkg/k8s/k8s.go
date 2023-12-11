@@ -1,47 +1,81 @@
 package k8s
 
 import (
-	"context"
-	"path"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
 
-	"github.com/chrisbradleydev/go-k8s/utils"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	cnrm "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/client/clientset/versioned"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func GetClient() kubernetes.Interface {
-	config, err := clientcmd.BuildConfigFromFlags("", path.Join(utils.GetHomeDir(), ".kube/config"))
-	if err != nil {
-		panic(err.Error())
-	}
-	client, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
-	}
-	return client
+type Application struct {
+	restConfig *rest.Config
+	kubeClient *kubernetes.Clientset
+	cnrmClient *cnrm.Clientset
+	namespace  string
+	errors     AppErrorsList
 }
 
-func GetPod(podName string, getOptions metav1.GetOptions) (*corev1.Pod, error) {
-	pod, err := GetClient().CoreV1().Pods("").Get(
-		context.TODO(),
-		podName,
-		getOptions,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return pod, nil
+type AppError struct {
+	Name     string
+	Message  string
 }
 
-func GetPods() (*corev1.PodList, error) {
-	pods, err := GetClient().CoreV1().Pods("").List(
-		context.TODO(),
-		metav1.ListOptions{},
-	)
+type AppErrorsList []*AppError
+
+const (
+	cloudSQLWaitTimeout          =  20 * time.Minute
+	resourceCheckInterval        =  500 * time.Millisecond
+)
+
+const (
+	ColorRed   = "\033[0;31m"
+	ColorWhite = "\033[0;37m"
+	ColorBlue  = "\033[1;34m"
+	ColorNc    = "\x1b[0m"
+)
+
+var resourcesCount int
+
+func NewApp(namespace string) *Application {
+	resourcesCount = 0
+
+	var err error
+	var restConfig *rest.Config
+	configPath := filepath.Join(os.Getenv("HOME"), ".kube", "config")
+	restConfig, err = clientcmd.BuildConfigFromFlags("", configPath)
 	if err != nil {
-		return nil, err
+		fmt.Println(err)
 	}
-	return pods, nil
+
+	app := &Application{
+		restConfig: restConfig,
+		namespace:  namespace,
+	}
+
+	kubeClient, err := app.createClient()
+	if err != nil {
+		fmt.Println(err)
+	}
+	app.kubeClient = kubeClient
+
+	cnrmClient, err := app.createCNRM()
+	if err != nil {
+		fmt.Println(err)
+	}
+	app.cnrmClient = cnrmClient
+
+	return app
+}
+
+func (app *Application) createClient() (*kubernetes.Clientset, error) {
+	return kubernetes.NewForConfig(app.restConfig)
+}
+
+func (app *Application) createCNRM() (*cnrm.Clientset, error) {
+	return cnrm.NewForConfig(app.restConfig)
 }
