@@ -20,9 +20,7 @@ func (s *SqlInstanceGroup) watchEvents(
 			event, healthy := s.processEvent(baseEvent, e)
 			eventsChan <- event
 			if healthy {
-				resourcesCount--
 				fmt.Printf("%s %s complete\n", event.Type, event.Name)
-				fmt.Printf("remaining resources: %d\n", resourcesCount)
 				return nil
 			}
 		case <-s.ctx.Done():

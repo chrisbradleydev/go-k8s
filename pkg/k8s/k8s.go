@@ -39,11 +39,7 @@ const (
 	ColorNc    = "\x1b[0m"
 )
 
-var resourcesCount int
-
 func NewApp(namespace string) *Application {
-	resourcesCount = 0
-
 	var err error
 	var restConfig *rest.Config
 	configPath := filepath.Join(os.Getenv("HOME"), ".kube", "config")

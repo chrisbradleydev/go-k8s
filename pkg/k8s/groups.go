@@ -131,7 +131,6 @@ func (s *SqlInstanceGroupList) AddInstance(i SqlInstance) {
 		return
 	}
 	s.AddGroup(s.NewGroup(i.Name))
-	resourcesCount++
 }
 
 func (s *SqlInstanceGroupList) AddDatabase(d SqlDatabase) {
@@ -140,7 +139,6 @@ func (s *SqlInstanceGroupList) AddDatabase(d SqlDatabase) {
 		group = s.NewGroup(d.InstanceName)
 	}
 	group.AddDatabase(d)
-	resourcesCount++
 }
 
 func (s *SqlInstanceGroupList) AddUser(u SqlUser) {
@@ -149,7 +147,6 @@ func (s *SqlInstanceGroupList) AddUser(u SqlUser) {
 		group = s.NewGroup(u.InstanceName)
 	}
 	group.AddUser(u)
-	resourcesCount++
 }
 
 func (g *SqlInstanceGroup) AddUser(d SqlUser) {
