@@ -149,21 +149,6 @@ func (s *SqlInstanceGroupList) AddUser(u SqlUser) {
 	group.AddUser(u)
 }
 
-func (g *SqlInstanceGroup) AddUser(d SqlUser) {
-	if !g.HasUser(d) {
-		g.Users = append(g.Users, &d)
-	}
-}
-
-func (g *SqlInstanceGroup) HasUser(d SqlUser) bool {
-	for _, d := range g.Users {
-		if g.Name == d.Name {
-			return true
-		}
-	}
-	return false
-}
-
 func (g *SqlInstanceGroup) AddDatabase(d SqlDatabase) {
 	if !g.HasDatabase(d) {
 		g.Databases = append(g.Databases, &d)
@@ -171,8 +156,23 @@ func (g *SqlInstanceGroup) AddDatabase(d SqlDatabase) {
 }
 
 func (g *SqlInstanceGroup) HasDatabase(d SqlDatabase) bool {
-	for _, d := range g.Databases {
-		if g.Name == d.Name {
+	for _, database := range g.Databases {
+		if d.Name == database.Name {
+			return true
+		}
+	}
+	return false
+}
+
+func (g *SqlInstanceGroup) AddUser(u SqlUser) {
+	if !g.HasUser(u) {
+		g.Users = append(g.Users, &u)
+	}
+}
+
+func (g *SqlInstanceGroup) HasUser(u SqlUser) bool {
+	for _, user := range g.Users {
+		if u.Name == user.Name {
 			return true
 		}
 	}
